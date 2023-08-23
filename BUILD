@@ -4,6 +4,7 @@ load(
     "envoy_package",
 )
 load("//bazel/wasm:wasm.bzl", "envoy_wasm_cc_binary")
+load("//bazel:envoy_internal.bzl","envoy_external_dep_path")
 
 licenses(["notice"])  # Apache 2
 
@@ -36,7 +37,8 @@ filegroup(
 
 envoy_wasm_cc_binary(
     name = "envoy_filter_http_basic_auth.wasm",
-    srcs = ["envoy_filter_http_basic_auth.cc"],
+    srcs = [ "envoy_filter_http_basic_auth.cc", ],
+    deps = [envoy_external_dep_path("json"),],
 )
 
 filegroup(
