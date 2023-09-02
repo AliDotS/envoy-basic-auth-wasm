@@ -10,7 +10,7 @@
 class BasicAuthRootContext : public RootContext {
 public:
   std::unordered_set<std::string> users;
-  std::string auth_header_name;
+  std::string authHeaderName;
   explicit BasicAuthRootContext(uint32_t id, std::string_view root_id) : RootContext(id, root_id) {}
   bool onConfigure(size_t) override;
 };
@@ -48,12 +48,12 @@ bool BasicAuthRootContext::onConfigure(size_t configSize) {
     return 0;
   }
 
-  auto auth_header = config["auth_header"];
-  if (!auth_header.is_string()) {
+  auto authHeader = config["auth_header"];
+  if (!authHeader.is_string()) {
     LOG_ERROR("auth_header value should be a string!");
     return 0;
   }
-  this->auth_header_name = std::string(auth_header);
+  this->authHeaderName = std::string(authHeader);
 
   for (auto& cred : credentials) {
     if (!cred.is_string() or std::string(cred).find(':') == std::string::npos) {
@@ -61,22 +61,22 @@ bool BasicAuthRootContext::onConfigure(size_t configSize) {
       return 0;
     }
 
-    this->users.insert(absl::Base64Escape("Basic: " + std::string(cred)));
+    this->users.insert("Basic " + absl::Base64Escape(std::string(cred)));
   }
 
   return true;
 }
 
 FilterHeadersStatus BasicAuthContext::onRequestHeaders(uint32_t, bool) {
-  auto proxyAuthHeader = getRequestHeader(this->rootContext->auth_header_name);
-  auto proxyAuthHeaderSize = proxyAuthHeader->size();
+  auto authHeader = getRequestHeader(this->rootContext->authHeaderName);
+  auto authHeaderSize = authHeader->size();
 
-  if (proxyAuthHeaderSize <= 7) {
+  if (authHeaderSize <= 7) {
     this->respondWith401_();
     return FilterHeadersStatus::StopIteration;
   }
 
-  if (this->rootContext->users.count(proxyAuthHeader->toString()) == 0) {
+  if (this->rootContext->users.count(authHeader->toString()) == 0) {
     this->respondWith401_();
     return FilterHeadersStatus::StopIteration;
   }
