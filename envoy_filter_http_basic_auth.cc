@@ -34,31 +34,31 @@ bool BasicAuthRootContext::onConfigure(size_t configSize) {
       getBufferBytes(WasmBufferType::PluginConfiguration, 0, configSize)->toString();
   if (!nlohmann::json::accept(configuration)) {
     LOG_ERROR("invalid json configuration");
-    return 0;
+    return false;
   }
   auto config = nlohmann::json::parse(configuration);
   if (!config.contains("credentials") || !config.contains("auth_header")) {
     LOG_ERROR("Provided configuration doesn't contain 'credentials' or 'auth_header' key");
-    return 0;
+    return false;
   }
 
   auto credentials = config["credentials"];
   if (!credentials.is_array()) {
     LOG_ERROR("credentials value should be an array!");
-    return 0;
+    return false;
   }
 
   auto authHeader = config["auth_header"];
   if (!authHeader.is_string()) {
     LOG_ERROR("auth_header value should be a string!");
-    return 0;
+    return false;
   }
   this->authHeaderName = std::string(authHeader);
 
   for (auto& cred : credentials) {
     if (!cred.is_string() or std::string(cred).find(':') == std::string::npos) {
       LOG_ERROR("Each credential should be an string in the form of user:pass");
-      return 0;
+      return false;
     }
 
     this->users.insert("Basic " + absl::Base64Escape(std::string(cred)));
